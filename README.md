@@ -2,7 +2,7 @@
 
 苹果内购封装工具 / Easy to use
 
-![-w300](https://tva1.sinaimg.cn/large/006tNbRwgy1g9hnjvwkhkj30ku1127g6.jpg)
+![](https://tva1.sinaimg.cn/large/006tNbRwgy1g9hnjvwkhkj30ku1127g6.jpg)
 
 
 #### 提供如下方法：

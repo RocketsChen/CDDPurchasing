@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <StoreKit/StoreKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -38,8 +39,8 @@ typedef NS_ENUM(NSInteger, PurchaseFiledCode) {
 
 
 /// 恢复购买
-/// @param productID 商品 ID
-- (void)restoreWithProduct:(NSString *)productID;
+/// @param transactions 商品订单模型数组
+- (void)restoreWithProduct:(NSArray <SKPaymentTransaction*>*)transactions;
 
 
 @optional //购买完之后是否向iOS服务器验证

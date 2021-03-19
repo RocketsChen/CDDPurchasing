@@ -7,7 +7,6 @@
 //
 
 #import "DCPurchaseHelp.h"
-#import <StoreKit/StoreKit.h>
 
 
 @interface DCPurchaseHelp() <SKPaymentTransactionObserver,SKProductsRequestDelegate>
@@ -141,17 +140,13 @@
         NSError *dataError;
         NSDictionary *checkResult = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingAllowFragments error:&dataError];
         if (!error || !dataError) {
-            if (self.delegate && [self.delegate respondsToSelector:@selector(checkSuccessedWithProduct:checkResult:)]) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [self.delegate checkSuccessedWithProduct:productID checkResult:checkResult];
-                });
-            }
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.delegate checkSuccessedWithProduct:productID checkResult:checkResult];
+            });
         }else{
-            if (self.delegate && [self.delegate respondsToSelector:@selector(checkFailedWithProduct:checkResult:)]) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [self.delegate checkFailedWithProduct:productID checkResult:checkResult];
-                });
-            }
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.delegate checkFailedWithProduct:productID checkResult:checkResult];
+            });
         }
     }];
     [sessionDataTask resume];
@@ -161,7 +156,7 @@
 - (void)restorePurchase
 {
     if (!self.canMakePay) { NSLog(@"当前环境不支持支付。");
-        if (self.delegate && [self.delegate respondsToSelector:@selector(getErrorCode:)]) {
+        if ([self.delegate respondsToSelector:@selector(getErrorCode:)]) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self.delegate getErrorCode:PAY_FILEDCOED_NOTSUPPORT];
             });
@@ -183,18 +178,16 @@
         [self.productDict setObject:product forKey:product.productIdentifier];
         [productArray addObject:product];
     }
-    
-    if (self.delegate && [self.delegate respondsToSelector:@selector(getPurchaseProductsInfo:)]) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self.delegate getPurchaseProductsInfo:productArray];
-        });
-    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.delegate getPurchaseProductsInfo:productArray];
+    });
 }
 
 
 #pragma mark - SKPaymentTransactionObserver
 - (void)paymentQueue:(SKPaymentQueue *)queue updatedTransactions:(NSArray *)transactions
 {
+    NSMutableArray <SKPaymentTransaction *>*restoredArrauy = [NSMutableArray array];
     for (SKPaymentTransaction *transaction in transactions) {
         
         if (SKPaymentTransactionStatePurchased == transaction.transactionState) {
@@ -202,7 +195,7 @@
             [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
             
             if(self.checkAfterPay){  // 验证
-                if (self.delegate && [self.delegate respondsToSelector:@selector(paySuccessedPrepareCheck:)]) {
+                if ([self.delegate respondsToSelector:@selector(paySuccessedPrepareCheck:)]) {
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [self.delegate paySuccessedPrepareCheck:transaction.payment.productIdentifier];
                     });
@@ -210,7 +203,7 @@
                 }
             }else{
                 
-                if (self.delegate && [self.delegate respondsToSelector:@selector(paySuccessedWithProduct:)]) {
+                if ([self.delegate respondsToSelector:@selector(paySuccessedWithProduct:)]) {
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [self.delegate paySuccessedWithProduct:transaction.payment.productIdentifier];
                     });
@@ -219,12 +212,7 @@
         } else if (SKPaymentTransactionStateRestored == transaction.transactionState) {
             
             [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
-            
-            if (self.delegate && [self.delegate respondsToSelector:@selector(restoreWithProduct:)]) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [self.delegate restoreWithProduct:transaction.payment.productIdentifier];
-                });
-            }
+            [restoredArrauy addObject:transaction];
             
         } else if (SKPaymentTransactionStateFailed == transaction.transactionState){
             
@@ -233,33 +221,33 @@
             
             if(transaction.error.code != SKErrorPaymentCancelled) { // 支付失败
 
-                if (self.delegate && [self.delegate respondsToSelector:@selector(payFailedWithProduct:)]) {
+                if ([self.delegate respondsToSelector:@selector(payFailedWithProduct:)]) {
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [self.delegate payFailedWithProduct:transaction.payment.productIdentifier];
                     });
                 }
 
             } else { // 取消支付
-
-                if (self.delegate && [self.delegate respondsToSelector:@selector(payCancelWithProduct:)]) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [self.delegate payCancelWithProduct:transaction.payment.productIdentifier];
-                    });
-                }
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self.delegate payCancelWithProduct:transaction.payment.productIdentifier];
+                });
             }
-            
-            
             
         }else if(SKPaymentTransactionStatePurchasing == transaction.transactionState){
 
-            if (self.delegate && [self.delegate respondsToSelector:@selector(waitingWithProduct:)]) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [self.delegate waitingWithProduct:transaction.payment.productIdentifier];
-                });
-            }
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.delegate waitingWithProduct:transaction.payment.productIdentifier];
+            });
+            
         }else{
             [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
         }
+    }
+    
+    if ([self.delegate respondsToSelector:@selector(restoreWithProduct:)] && restoredArrauy.count > 0) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.delegate restoreWithProduct:restoredArrauy];
+        });
     }
 }
 

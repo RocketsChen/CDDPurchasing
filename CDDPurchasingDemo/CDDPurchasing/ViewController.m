@@ -45,9 +45,9 @@
     
     self.bundleField.text = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleIdentifier"];
     
-    self.goods1Field.text = @"com.purchasing.test01";
-    self.goods2Field.text = @"com.purchasing.test02";
-    self.goods3Field.text = @"com.purchasing.test03";
+    self.goods1Field.text = @"com.cdd.subscribe";
+    self.goods2Field.text = @"com.subscribe.test11";
+    self.goods3Field.text = @"com.cdd.subscribe1";
     
     [DCPurchaseHelp sharedHelp].delegate = self;
     
@@ -194,9 +194,9 @@
 }
 
 
-- (void)restoreWithProduct:(NSString *)productID
+- (void)restoreWithProduct:(NSArray <SKPaymentTransaction *>*)transactions
 {
-    NSLog(@"恢复商品");
+    NSLog(@"恢复商品 %@",transactions);
 }
 
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
